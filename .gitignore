@@ -1,0 +1,28 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments & Virtual Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Databricks local state & tokens
+.databricks/
+*.token
+*.key
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Scratch & Temporary files
+*.tmp
+*.bak
+*.log
