@@ -1,5 +1,7 @@
 # KD_SHOP_FLC: Modern Retail Lakehouse & Executive Analytics
 
+[![CI/CD Pipeline](https://github.com/dothanhtuan1704-droid/databricks-retail-lakehouse/actions/workflows/ci.yml/badge.svg)](https://github.com/dothanhtuan1704-droid/databricks-retail-lakehouse/actions/workflows/ci.yml)
+[![Databricks Asset Bundles](https://img.shields.io/badge/IaC-Databricks%20Asset%20Bundles%20(DABs)-blue?logo=databricks)](databricks.yml)
 [![Databricks](https://img.shields.io/badge/Platform-Databricks%20Lakehouse-orange?logo=databricks)](https://databricks.com/)
 [![Apache Spark](https://img.shields.io/badge/Engine-PySpark%203.5-red?logo=apachespark)](https://spark.apache.org/)
 [![Delta Lake](https://img.shields.io/badge/Storage-Delta%20Lake%203.x-blue?logo=delta)](https://delta.io/)
@@ -174,6 +176,27 @@ Total Customers = DISTINCTCOUNT(fact_sales[customer_key])
 
 ---
 
+## ⚙️ CI/CD & Infrastructure as Code (DABs)
+
+This project adopts enterprise-grade **DevOps for Data** standards:
+
+* **Automated CI with GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)):**
+  * Automated syntax compilation across all PySpark pipeline notebooks.
+  * Static code analysis with `flake8`.
+  * Automated test execution verifying notebook artifacts, financial checksum logic ($57.53M), and referential integrity assertions (0 orphans).
+* **Databricks Asset Bundles ([databricks.yml](databricks.yml)):**
+  * Infrastructure as Code (IaC) configuration for multi-environment lifecycle (`dev` vs `prod`).
+  * Declarative definition of automated `retail_lakehouse_orchestration` Job cluster, autoscaling worker policy, cron schedule (`0 0 2 * * ?`), and email failure alerts.
+
+```bash
+# Validate and deploy via Databricks CLI / DABs
+databricks bundle validate -t prod
+databricks bundle deploy -t prod
+databricks bundle run retail_lakehouse_orchestration -t prod
+```
+
+---
+
 ## 🚀 How to Run & Reproduce
 
 ### Prerequisites
@@ -185,13 +208,14 @@ Total Customers = DISTINCTCOUNT(fact_sales[customer_key])
 ### Setup Instructions
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/TuanThanh999/KD_SHOP_FLC_Lakehouse.git
-   cd KD_SHOP_FLC_Lakehouse
+   git clone https://github.com/dothanhtuan1704-droid/databricks-retail-lakehouse.git
+   cd databricks-retail-lakehouse
    ```
 2. **Import notebooks to Databricks:**
-   * Import all files from `/notebooks` into your workspace user directory.
+   * In Databricks Workspace, navigate to **Workspace** $\rightarrow$ **Repos** (or Git Folders).
+   * Clone repository `https://github.com/dothanhtuan1704-droid/databricks-retail-lakehouse.git`.
 3. **Execute End-to-End Pipeline:**
-   * Run Databricks Workflow Job or run notebooks sequentially from `01` to `04`.
+   * Run Databricks Workflow Job `KD_SHOP_FLC Medallion Lakehouse Pipeline` or execute notebooks sequentially from `01` to `04`.
 4. **Open Dashboard:**
    * Open `powerbi/KD_SHOP_FLC_Business_Performance_Dashboard.pbix` in Power BI Desktop.
    * Edit Data Source Settings to input your Databricks Serverless SQL Warehouse Hostname & HTTP Path.
@@ -200,7 +224,7 @@ Total Customers = DISTINCTCOUNT(fact_sales[customer_key])
 ---
 
 ## 👨‍💻 Author & Project Credits
-* **Developer:** Phan Do Thanh Tuan ([@TuanThanh999](https://github.com/TuanThanh999))
+* **Developer:** Phan Do Thanh Tuan ([@dothanhtuan1704-droid](https://github.com/dothanhtuan1704-droid))
 * **Target Role:** Data Engineer (OJT / Internship at QAI - FPT Software)
 * **Mentor:** Long (`Lvn`)
 * **Project:** Modern Retail Lakehouse & Executive Analytics Capstone

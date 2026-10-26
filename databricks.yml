@@ -1,0 +1,76 @@
+# Databricks Asset Bundle (DAB) Configuration
+# Project: KD_SHOP_FLC Modern Retail Lakehouse & Executive Analytics
+# Architecture: Medallion Multi-hop (Bronze -> Silver -> Gold -> UAT)
+
+bundle:
+  name: databricks-retail-lakehouse
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-f1a30aac-c96c.cloud.databricks.com
+      root_path: /Users/phandothanhtuan1704@gmail.com/.bundle/${bundle.name}/${bundle.target}
+
+  prod:
+    mode: production
+    workspace:
+      host: https://dbc-f1a30aac-c96c.cloud.databricks.com
+      root_path: /Shared/.bundle/${bundle.name}/${bundle.target}
+    run_as:
+      user_name: phandothanhtuan1704@gmail.com
+
+resources:
+  jobs:
+    retail_lakehouse_orchestration:
+      name: "[PROD] KD_SHOP_FLC Medallion Lakehouse Pipeline"
+      description: "Automated end-to-end retail lakehouse ingestion, SCD2 transformation, star schema serving, and reconciliation."
+      
+      schedule:
+        quartz_cron_expression: "0 0 2 * * ?"
+        timezone_id: "Asia/Ho_Chi_Minh"
+        pause_status: PAUSED
+
+      email_notifications:
+        on_failure:
+          - phandothanhtuan1704@gmail.com
+
+      job_clusters:
+        - job_cluster_key: automated_pipeline_cluster
+          new_cluster:
+            spark_version: 14.3.x-scala2.12
+            node_type_id: i3.xlarge
+            autoscale:
+              min_workers: 1
+              max_workers: 4
+            spark_conf:
+              spark.sql.adaptive.enabled: "true"
+              spark.sql.adaptive.skewJoin.enabled: "true"
+
+      tasks:
+        - task_key: 01_bronze_ingestion
+          job_cluster_key: automated_pipeline_cluster
+          notebook_task:
+            notebook_path: notebooks/01_bronze_ingestion_autoloader.py
+
+        - task_key: 02_silver_transformations
+          depends_on:
+            - task_key: 01_bronze_ingestion
+          job_cluster_key: automated_pipeline_cluster
+          notebook_task:
+            notebook_path: notebooks/02_silver_transformations_scd2.py
+
+        - task_key: 03_gold_star_schema
+          depends_on:
+            - task_key: 02_silver_transformations
+          job_cluster_key: automated_pipeline_cluster
+          notebook_task:
+            notebook_path: notebooks/03_gold_star_schema_serving.py
+
+        - task_key: 04_data_quality_reconciliation
+          depends_on:
+            - task_key: 03_gold_star_schema
+          job_cluster_key: automated_pipeline_cluster
+          notebook_task:
+            notebook_path: notebooks/04_data_quality_reconciliation.py

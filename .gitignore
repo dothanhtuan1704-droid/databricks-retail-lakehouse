@@ -26,3 +26,6 @@ desktop.ini
 *.tmp
 *.bak
 *.log
+
+# Local Chat Transcripts (Private)
+LICH_SU_TOAN_BO_CUOC_TRO_CHUYEN.md

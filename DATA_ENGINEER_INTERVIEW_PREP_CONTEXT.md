@@ -1,4 +1,4 @@
-# TỔNG HỢP TOÀN BỘ CONTEXT CUỘC TRÒ CHUYỆN & CẨM NANG PHỎNG VẤN DATA ENGINEER (DATABRICKS + POWER BI)
+ TỔNG HỢP TOÀN BỘ CONTEXT CUỘC TRÒ CHUYỆN & CẨM NANG PHỎNG VẤN DATA ENGINEER (DATABRICKS + POWER BI)
 
 > **Ứng viên:** Sinh viên AI19 (Data Engineer Intern / Fresher)  
 > **Mục tiêu:** Vượt qua vòng phỏng vấn tuyển dụng ngày **25 - 30/10/2026** để nhận slot **OJT tại QAI (FPT Software)** dưới sự dẫn dắt của **Thầy Long (`Lvn`)**.  
