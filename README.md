@@ -110,7 +110,6 @@ flowchart TD
 │   └── Page3_Customer_Logistics_Operations.png          # Page 3: Customer Demographics & Logistics
 ├── data/
 │   └── raw/                                   # Source raw transactional & dimension CSVs
-├── docs/                                      # Theoretical deep-dives, migration notes & guides
 ├── .gitignore
 └── README.md
 ```
