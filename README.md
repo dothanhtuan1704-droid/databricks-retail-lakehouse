@@ -101,10 +101,13 @@ flowchart TD
 │   ├── 01_bronze_ingestion_autoloader.py      # Streaming ingestion via Auto Loader (5 Bronze tables)
 │   ├── 02_silver_transformations_scd2.py      # SCD Type 2 merge & temporal multi-currency conversion
 │   ├── 03_gold_star_schema_serving.py         # Kimball Star Schema with Liquid Clustering
-│   └── 04_data_quality_reconciliation.py     # Automated checksums & referential integrity validation
+│   ├── 04_data_quality_reconciliation.py     # Automated checksums & referential integrity validation
+│   └── *.ipynb                               # Interactive Jupyter Notebook versions
 ├── powerbi/
-│   ├── KD_SHOP_FLC_Business_Performance_Dashboard.pbix   # Production Power BI report file
-│   └── dashboard_overview.png                            # High-resolution dashboard screenshot
+│   ├── KD_SHOP_FLC_Business_Performance_Dashboard.pbix   # Production 3-Page Power BI report
+│   ├── Page1_Business_Performance_Dashboard.png          # Page 1: Executive Business Performance
+│   ├── Page2_Product_Category_DeepDive.png               # Page 2: Product & Category Deep-Dive
+│   └── Page3_Customer_Logistics_Operations.png          # Page 3: Customer Demographics & Logistics
 ├── data/
 │   └── raw/                                   # Source raw transactional & dimension CSVs
 ├── docs/                                      # Theoretical deep-dives, migration notes & guides
@@ -153,10 +156,29 @@ flowchart TD
 
 ---
 
-## 📈 Power BI Direct Connection & DAX Measures
+## 📈 Power BI 3-Page Executive Analytics Suite
 
-Connected via Databricks Serverless SQL Warehouse connector. Built the core business logic via optimized DAX measures:
+Connected directly to Databricks Serverless SQL Warehouse, delivering sub-second interactive analytics across 3 business-critical perspectives:
 
+### Page 1: Executive Business Performance (CFO & Leadership Overview)
+* **Core Metrics:** Total Sales **$57.53M**, Total Profit **$33.70M**, Margin **58.58%**, Total Orders **26,326**.
+* **Visuals:** KPI callouts, store size revenue distribution, fulfillment status donut, multi-year sales & order volume trajectory, multi-dimensional Year/Month hierarchy matrix.
+
+![Page 1: Executive Business Performance](powerbi/Page1_Business_Performance_Dashboard.png)
+
+### Page 2: Product & Category Deep-Dive (Merchandising Intelligence)
+* **Core Metrics:** Units Sold, Category Revenue Share, Average Order Value (AOV), Top Category.
+* **Visuals:** 8-color gradient Category Treemap, Top 10 Bestselling Products clustered bar chart, multi-slicer filtering (Date, Category, Country, Brand).
+
+![Page 2: Product & Category Deep-Dive](powerbi/Page2_Product_Category_DeepDive.png)
+
+### Page 3: Customer Demographics & Global Logistics Operations (Supply Chain & CRM)
+* **Core Metrics:** Total Customers (11,887), Avg Delivery Days (4.5 Days), On-Time Rate, Pending Orders.
+* **Visuals:** World Geographic Bubble Map, Revenue by Gender Donut Chart, Sales by Customer Age Group Column Chart, Avg Delivery Days by Destination Country Bar Chart.
+
+![Page 3: Customer Demographics & Global Logistics Operations](powerbi/Page3_Customer_Logistics_Operations.png)
+
+### Core DAX Measures
 ```dax
 -- Total Net Sales
 Total Sales USD = SUM(fact_sales[sales_amount_usd])
@@ -168,7 +190,7 @@ Total Profit USD = SUM(fact_sales[gross_profit_usd])
 Profit Margin % = DIVIDE([Total Profit USD], [Total Sales USD], 0)
 
 -- Distinct Orders Count
-Total Orders = DISTINCTCOUNT(fact_sales[order_id])
+Total Orders = DISTINCTCOUNT(fact_sales[order_number])
 
 -- Active Customers Count
 Total Customers = DISTINCTCOUNT(fact_sales[customer_key])
