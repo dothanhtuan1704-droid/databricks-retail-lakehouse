@@ -98,14 +98,14 @@ flowchart TD
 
 ```text
 ├── docs/
-│   └── DATA_MAPPING_SPECIFICATION.md         # Formal Source-to-Target Mapping (STTM) Specification
+│   ├── DATA_MAPPING_SPECIFICATION.md         # Formal Source-to-Target Mapping (STTM) Specification
+│   └── notebooks_ipynb/                      # Interactive Jupyter Notebook versions (.ipynb)
 ├── notebooks/
 │   ├── 01_bronze_ingestion_autoloader.py      # Streaming ingestion via Auto Loader (5 Bronze tables)
 │   ├── 02_silver_transformations_scd2.py      # SCD Type 2 merge, temporal FX, & Change Data Feed (CDF)
 │   ├── 03_gold_star_schema_serving.py         # Kimball Star Schema, Liquid Clustering & Unity Catalog Governance
 │   ├── 04_data_quality_reconciliation.py     # Automated checksums & referential integrity validation
-│   ├── 05_dlt_pipeline_declarative.py         # Lakeflow Declarative Pipeline (DLT) with Expectations
-│   └── *.ipynb                               # Interactive Jupyter Notebook versions
+│   └── 05_dlt_pipeline_declarative.py         # Lakeflow Declarative Pipeline (DLT) with Expectations
 ├── powerbi/
 │   ├── KD_SHOP_FLC_Business_Performance_Dashboard.pbix   # Production 3-Page Power BI report
 │   ├── Page1_Business_Performance_Dashboard.png          # Page 1: Executive Business Performance

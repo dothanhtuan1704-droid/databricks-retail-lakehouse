@@ -11,18 +11,23 @@ class TestPipelineIntegrity(unittest.TestCase):
         """Ensure all medallion pipeline notebooks and declarative DLT files are present."""
         expected_notebooks = [
             "notebooks/01_bronze_ingestion_autoloader.py",
-            "notebooks/01_bronze_ingestion_autoloader.ipynb",
             "notebooks/02_silver_transformations_scd2.py",
-            "notebooks/02_silver_transformations_scd2.ipynb",
             "notebooks/03_gold_star_schema_serving.py",
-            "notebooks/03_gold_star_schema_serving.ipynb",
             "notebooks/04_data_quality_reconciliation.py",
-            "notebooks/04_data_quality_reconciliation.ipynb",
-            "notebooks/05_dlt_pipeline_declarative.py",
-            "notebooks/05_dlt_pipeline_declarative.ipynb"
+            "notebooks/05_dlt_pipeline_declarative.py"
         ]
         for nb in expected_notebooks:
             self.assertTrue(os.path.exists(nb), f"Critical pipeline notebook missing: {nb}")
+
+        expected_ipynb = [
+            "docs/notebooks_ipynb/01_bronze_ingestion_autoloader.ipynb",
+            "docs/notebooks_ipynb/02_silver_transformations_scd2.ipynb",
+            "docs/notebooks_ipynb/03_gold_star_schema_serving.ipynb",
+            "docs/notebooks_ipynb/04_data_quality_reconciliation.ipynb",
+            "docs/notebooks_ipynb/05_dlt_pipeline_declarative.ipynb"
+        ]
+        for nb in expected_ipynb:
+            self.assertTrue(os.path.exists(nb), f"Critical Jupyter preview notebook missing: {nb}")
 
     def test_data_mapping_specification_exists(self):
         """Verify that the formal Source-to-Target Mapping (STTM) document is present."""
