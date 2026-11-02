@@ -267,3 +267,41 @@ print(f"[SUCCESS] silver_sales created! Total orders line items: {df_silver_sale
 # MAGIC     CONCAT('$', FORMAT_NUMBER(SUM(gross_profit_usd), 2)) AS total_profit_usd,
 # MAGIC     ROUND((SUM(gross_profit_usd) / SUM(sales_amount_usd)) * 100, 2) AS overall_profit_margin_pct
 # MAGIC FROM workspace.silver.silver_sales;
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### 7. DELTA LAKE CHANGE DATA FEED (CDF) & TIME TRAVEL AUDITING
+# MAGIC 
+# MAGIC > **Enterprise CDC & Operational Auditability:**
+# MAGIC > - **Change Data Feed (CDF):** Enable CDC on Silver tables to automatically record row-level inserts, updates, and deletes.
+# MAGIC > - **Downstream Streaming Consumer:** Downstream pipelines or auditing systems consume only the changes (`_change_type`).
+# MAGIC > - **Time Travel Auditing:** Inspect historical state at specific Delta table versions or timestamps.
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC -- 7.1 Enable Delta Change Data Feed (CDF) on Silver Products and Sales
+# MAGIC ALTER TABLE workspace.silver.silver_products_scd2 
+# MAGIC SET TBLPROPERTIES (delta.enableChangeDataFeed = true);
+# MAGIC 
+# MAGIC ALTER TABLE workspace.silver.silver_sales 
+# MAGIC SET TBLPROPERTIES (delta.enableChangeDataFeed = true);
+# MAGIC 
+# MAGIC -- 7.2 Query Change Data Feed to inspect SCD Type 2 Price Adjustments
+# MAGIC -- Captures exact operation: 'insert', 'update_preimage', 'update_postimage'
+# MAGIC SELECT 
+# MAGIC     product_key,
+# MAGIC     product_name,
+# MAGIC     unit_price_usd,
+# MAGIC     _change_type,
+# MAGIC     _commit_version,
+# MAGIC     _commit_timestamp
+# MAGIC FROM table_changes('workspace.silver.silver_products_scd2', 1)
+# MAGIC LIMIT 20;
+# MAGIC 
+# MAGIC -- 7.3 Delta Lake Time Travel Query
+# MAGIC -- Inspect historical state of sales before recent batch processing
+# MAGIC SELECT COUNT(*) AS historical_sales_count 
+# MAGIC FROM workspace.silver.silver_sales VERSION AS OF 1;
+

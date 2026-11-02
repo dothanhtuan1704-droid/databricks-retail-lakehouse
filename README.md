@@ -97,11 +97,14 @@ flowchart TD
 ## 📂 Repository Structure
 
 ```text
+├── docs/
+│   └── DATA_MAPPING_SPECIFICATION.md         # Formal Source-to-Target Mapping (STTM) Specification
 ├── notebooks/
 │   ├── 01_bronze_ingestion_autoloader.py      # Streaming ingestion via Auto Loader (5 Bronze tables)
-│   ├── 02_silver_transformations_scd2.py      # SCD Type 2 merge & temporal multi-currency conversion
-│   ├── 03_gold_star_schema_serving.py         # Kimball Star Schema with Liquid Clustering
+│   ├── 02_silver_transformations_scd2.py      # SCD Type 2 merge, temporal FX, & Change Data Feed (CDF)
+│   ├── 03_gold_star_schema_serving.py         # Kimball Star Schema, Liquid Clustering & Unity Catalog Governance
 │   ├── 04_data_quality_reconciliation.py     # Automated checksums & referential integrity validation
+│   ├── 05_dlt_pipeline_declarative.py         # Lakeflow Declarative Pipeline (DLT) with Expectations
 │   └── *.ipynb                               # Interactive Jupyter Notebook versions
 ├── powerbi/
 │   ├── KD_SHOP_FLC_Business_Performance_Dashboard.pbix   # Production 3-Page Power BI report
@@ -110,6 +113,9 @@ flowchart TD
 │   └── Page3_Customer_Logistics_Operations.png          # Page 3: Customer Demographics & Logistics
 ├── data/
 │   └── raw/                                   # Source raw transactional & dimension CSVs
+├── .github/workflows/ci.yml                   # Automated CI test workflow
+├── databricks.yml                             # Databricks Asset Bundles (DABs) IaC
+├── tests/test_pipeline_integrity.py           # Regression & integrity test suite
 ├── .gitignore
 └── README.md
 ```
@@ -123,13 +129,14 @@ flowchart TD
 * Activated `cloudFiles.schemaEvolutionMode = "addNewColumns"` and captured malformed rows inside `_rescued_data` column.
 * Configured stream checkpointing to enforce idempotency and zero data loss across pipeline restarts.
 
-### 2. Silver Layer: SCD Type 2 & Temporal Currency Conversion
+### 2. Silver Layer: SCD Type 2, Temporal FX & Change Data Feed (CDF)
 * **Slowly Changing Dimension Type 2 (SCD 2):** Built for `products` to track price and attribute modifications across time using deterministic surrogate hashing (`SHA2-256`), boolean flags (`is_current`), and timestamp intervals (`valid_from`, `valid_to`).
 * **Multi-Currency Reconciliation:** Solved column collision on `currency_code` and joined transactional records with daily historical exchange rates via temporal range joins:
   $$\text{sales.order\_date} \ge \text{fx.effective\_start\_date} \land \text{sales.order\_date} < \text{fx.effective\_end\_date}$$
 * Standardized all sales amounts, unit costs, gross profits, and profit margins into canonical USD currency.
+* **Delta Change Data Feed (CDF):** Enabled `delta.enableChangeDataFeed = true` allowing downstream streaming consumers to query granular row changes via `table_changes()`.
 
-### 3. Gold Layer: Kimball Star Schema & Liquid Clustering
+### 3. Gold Layer: Kimball Star Schema, Liquid Clustering & Governance
 * Modeled enterprise Star Schema adhering to Kimball methodologies:
   * **Fact Table:** `gold.fact_sales` (Grain: 1 line item per order)
   * **Dimension Tables:** `gold.dim_customer`, `gold.dim_product`, `gold.dim_store`, `gold.dim_date`
@@ -138,6 +145,9 @@ flowchart TD
   CLUSTER BY (store_key, order_date)
   ```
   This eliminates small-file problems, avoids partition skew, and achieves 3.8x query speedups for downstream BI queries.
+* **Unity Catalog Data Governance:**
+  * **Column Masking:** Masked customer PII names with dynamic policy `mask_customer_name()`.
+  * **Row-Level Security (RLS):** Isolated store records by geographic territory using `filter_store_country()`.
 
 ### 4. Automated Data Quality & Reconciliation UAT
 * Built regression test assertions in notebook `04_data_quality_reconciliation.py`:
@@ -145,7 +155,13 @@ flowchart TD
   * **Referential Integrity:** Enforced 0 orphan foreign keys (`store_key`, `customer_key`, `product_key`, `order_date`) against their respective dimension tables.
   * **Boundary Validation:** Verified margins remain within $[0\%, 100\%]$ and delivery days are strictly non-negative.
 
-### 5. Databricks Workflows Orchestration
+### 5. Lakeflow Declarative Pipelines (Delta Live Tables - DLT)
+* Created standalone declarative pipeline notebook `05_dlt_pipeline_declarative.py/.ipynb` demonstrating:
+  * `@dlt.expect`: Non-blocking warning telemetry logged in event store.
+  * `@dlt.expect_or_drop`: Automatic row-level filtering of invalid keys (`quantity > 0`).
+  * `@dlt.expect_or_fail`: Pipeline failure trigger on critical business constraint violations.
+
+### 6. Databricks Workflows Orchestration
 * Orchestrated sequential pipeline execution via **Databricks Workflows**:
   * **Job Name:** `D_SHOP_FLC_Enterprise_Lakehouse_Pipeline`
   * **Job ID:** `984453937688979`

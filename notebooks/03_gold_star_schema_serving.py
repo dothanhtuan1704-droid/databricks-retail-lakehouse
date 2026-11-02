@@ -274,3 +274,43 @@ print(f"[SUCCESS] agg_daily_store_sales created! Total aggregated records: {df_a
 # MAGIC     CONCAT('$', FORMAT_NUMBER(SUM(gross_profit_usd), 2))  AS total_profit_usd,
 # MAGIC     ROUND((SUM(gross_profit_usd) / SUM(sales_amount_usd)) * 100, 2) AS overall_profit_margin_pct
 # MAGIC FROM workspace.gold.fact_sales;
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### 7. ENTERPRISE DATA GOVERNANCE & SECURITY (UNITY CATALOG)
+# MAGIC 
+# MAGIC > **Enterprise Compliance & RBAC:**
+# MAGIC > - **Column Masking:** Mask sensitive PII data (Customer Name & Contact details) for non-privileged users.
+# MAGIC > - **Row-Level Security (RLS):** Apply Row Filters on store geographic regions so country store managers only view data for their assigned country.
+# MAGIC > - **Role-Based Access Control (RBAC):** Grant fine-grained SELECT permissions to BI Analysts while restricting DDL/DML.
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC -- 7.1 Column Masking: Mask PII Customer Names for non-executive analysts
+# MAGIC CREATE OR REPLACE FUNCTION workspace.gold.mask_customer_name(name STRING)
+# MAGIC RETURN IF(IS_ACCOUNT_GROUP_MEMBER('executives') OR IS_ACCOUNT_GROUP_MEMBER('admin'), 
+# MAGIC           name, 
+# MAGIC           CONCAT(LEFT(name, 2), '**** ****'));
+# MAGIC 
+# MAGIC ALTER TABLE workspace.gold.dim_customer 
+# MAGIC ALTER COLUMN name SET MASK workspace.gold.mask_customer_name;
+# MAGIC 
+# MAGIC -- 7.2 Row-Level Security: Regional Store Data Isolation
+# MAGIC CREATE OR REPLACE FUNCTION workspace.gold.filter_store_country(country STRING)
+# MAGIC RETURN IF(IS_ACCOUNT_GROUP_MEMBER('global_managers') OR IS_ACCOUNT_GROUP_MEMBER('admin'), 
+# MAGIC           true, 
+# MAGIC           country = CURRENT_USER());
+# MAGIC 
+# MAGIC ALTER TABLE workspace.gold.dim_store 
+# MAGIC SET ROW FILTER workspace.gold.filter_store_country ON (country);
+# MAGIC 
+# MAGIC -- 7.3 Role-Based Access Control (RBAC) Grants
+# MAGIC GRANT SELECT ON TABLE workspace.gold.fact_sales TO `bi_analysts`;
+# MAGIC GRANT SELECT ON TABLE workspace.gold.agg_daily_store_sales TO `bi_analysts`;
+# MAGIC GRANT SELECT ON TABLE workspace.gold.dim_date TO `bi_analysts`;
+# MAGIC GRANT SELECT ON TABLE workspace.gold.dim_customer TO `bi_analysts`;
+# MAGIC GRANT SELECT ON TABLE workspace.gold.dim_store TO `bi_analysts`;
+# MAGIC GRANT SELECT ON TABLE workspace.gold.dim_product TO `bi_analysts`;
+

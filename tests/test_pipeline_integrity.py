@@ -8,15 +8,26 @@ import unittest
 class TestPipelineIntegrity(unittest.TestCase):
 
     def test_notebooks_exist(self):
-        """Ensure all 4 medallion pipeline notebooks are present in the repo."""
+        """Ensure all medallion pipeline notebooks and declarative DLT files are present."""
         expected_notebooks = [
             "notebooks/01_bronze_ingestion_autoloader.py",
+            "notebooks/01_bronze_ingestion_autoloader.ipynb",
             "notebooks/02_silver_transformations_scd2.py",
+            "notebooks/02_silver_transformations_scd2.ipynb",
             "notebooks/03_gold_star_schema_serving.py",
-            "notebooks/04_data_quality_reconciliation.py"
+            "notebooks/03_gold_star_schema_serving.ipynb",
+            "notebooks/04_data_quality_reconciliation.py",
+            "notebooks/04_data_quality_reconciliation.ipynb",
+            "notebooks/05_dlt_pipeline_declarative.py",
+            "notebooks/05_dlt_pipeline_declarative.ipynb"
         ]
         for nb in expected_notebooks:
             self.assertTrue(os.path.exists(nb), f"Critical pipeline notebook missing: {nb}")
+
+    def test_data_mapping_specification_exists(self):
+        """Verify that the formal Source-to-Target Mapping (STTM) document is present."""
+        sttm_path = "docs/DATA_MAPPING_SPECIFICATION.md"
+        self.assertTrue(os.path.exists(sttm_path), f"STTM specification missing: {sttm_path}")
 
     def test_powerbi_artifacts_exist(self):
         """Verify that the compiled Power BI dashboard and preview assets exist."""
