@@ -50,57 +50,29 @@ The serving layer connects to a high-concurrency **Databricks Serverless SQL War
 
 ```mermaid
 flowchart LR
-    %% Pipeline Flow from Left to Right
-    subgraph S1["📦 1. Data Sources"]
-        CSV["<b>5 Raw CSV Feeds</b><br/>• Sales Orders (62,884)<br/>• Customers (11,887)<br/>• Products (2,517)<br/>• Stores (67)<br/>• Exchange Rates (Daily)"]
-    end
+    A["📦 <b>Data Sources</b><br/>5 CSV Feeds"] 
+    -->|CloudFiles Stream| B["🥉 <b>Bronze Layer</b><br/>Auto Loader Ingestion"]
+    -->|PySpark Clean & Merge| C["🥈 <b>Silver Layer</b><br/>SCD Type 2 & Temporal FX"]
+    -->|Liquid Clustering| D["🥇 <b>Gold Layer</b><br/>Kimball Star Schema"]
+    -->|Serverless SQL| E["📊 <b>Executive BI</b><br/>3-Page Power BI Suite"]
 
-    subgraph S2["🥉 2. Bronze Layer"]
-        AL["<b>Databricks Auto Loader</b><br/><code>cloudFiles Streaming</code><br/>• Automatic Schema Inference<br/>• Schema Evolution Tracking<br/>• <code>_rescued_data</code> Dead-Letter"]
-    end
-
-    subgraph S3["🥈 3. Silver Layer"]
-        S_Clean["<b>Conformed Transformations</b><br/>• Daily USD Temporal Rate Join<br/>• Deduplication & Cleaning<br/>• Delivery Lead-Time SLA"]
-        S_SCD2["<b>SCD Type 2 Tracking</b><br/>• Delta Lake <code>MERGE INTO</code><br/>• Deterministic SHA-256 SK<br/>• <code>is_current</code>, <code>valid_from/to</code><br/>• Change Data Feed (CDF)"]
-    end
-
-    subgraph S4["🥇 4. Gold Layer"]
-        STAR["<b>Kimball Star Schema</b><br/>• <b>fact_sales</b> (Liquid Clustered)<br/>• <b>dim_customer</b>, <b>dim_product</b><br/>• <b>dim_store</b>, <b>dim_date</b><br/>• <b>agg_daily_store_sales</b> (Serving)"]
-        GOV["<b>Data Governance (UC)</b><br/>• Column Mask: <code>mask_customer_name</code><br/>• Row Filter: <code>filter_store_country</code><br/>• Fine-Grained RBAC Grants"]
-    end
-
-    subgraph S5["📊 5. BI & Analytics"]
-        WH["<b>Serverless SQL Warehouse</b><br/>• Low-latency serving layer<br/>• Unity Catalog Metastore"]
-        PBI["<b>Power BI Executive Suite</b><br/>• Page 1: Business Performance<br/>• Page 2: Product Deep-Dive<br/>• Page 3: Customer & Logistics"]
-    end
-
-    %% Main Data Lineage
-    S1 -->|CloudFiles Stream| S2
-    S2 -->|PySpark Clean & Enrich| S3
-    S3 -->|Liquid Clustering CLUSTER BY| S4
-    S4 -->|DirectQuery / Import| S5
-
-    %% UAT Quality Assurance Gate
-    UAT{{"🛡️ Automated UAT Data Quality Verification<br/>62,884 Records • $57,531,338.52 Checksum (0 Variance) • 0 Orphan Foreign Keys"}}
-    S4 -.-> UAT
-    S5 -.-> UAT
-
-    %% Modern Theme Styling for GitHub Light & Dark Mode
-    style S1 fill:#1f2937,stroke:#3b82f6,stroke-width:2px,color:#ffffff
-    style S2 fill:#451a03,stroke:#d97706,stroke-width:2px,color:#fef3c7
-    style S3 fill:#1e293b,stroke:#94a3b8,stroke-width:2px,color:#f1f5f9
-    style S4 fill:#422006,stroke:#eab308,stroke-width:2px,color:#fef08a
-    style S5 fill:#2e1065,stroke:#a855f7,stroke-width:2px,color:#f3e8ff
-    style UAT fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5
-    style CSV fill:#111827,stroke:#60a5fa,stroke-width:1px,color:#ffffff
-    style AL fill:#78350f,stroke:#f59e0b,stroke-width:1px,color:#ffffff
-    style S_Clean fill:#334155,stroke:#cbd5e1,stroke-width:1px,color:#ffffff
-    style S_SCD2 fill:#334155,stroke:#cbd5e1,stroke-width:1px,color:#ffffff
-    style STAR fill:#713f12,stroke:#facc15,stroke-width:1px,color:#ffffff
-    style GOV fill:#713f12,stroke:#facc15,stroke-width:1px,color:#ffffff
-    style WH fill:#3b0764,stroke:#c084fc,stroke-width:1px,color:#ffffff
-    style PBI fill:#4c1d95,stroke:#d8b4fe,stroke-width:1px,color:#ffffff
+    style A fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#ffffff
+    style B fill:#451a03,stroke:#f59e0b,stroke-width:2px,color:#ffffff
+    style C fill:#0f172a,stroke:#94a3b8,stroke-width:2px,color:#ffffff
+    style D fill:#422006,stroke:#eab308,stroke-width:2px,color:#ffffff
+    style E fill:#2e1065,stroke:#a855f7,stroke-width:2px,color:#ffffff
 ```
+
+### 📐 Architecture Specifications & Governance
+
+| Layer | Core Technologies | Engineering Implementation & Business Impact |
+| :--- | :--- | :--- |
+| **📦 Data Sources** | Raw CSV Feeds | 62,884 order records, 11,887 customers, 2,517 products, 67 physical/online stores, historical FX rates. |
+| **🥉 Bronze** | Databricks Auto Loader | Streaming `cloudFiles` with schema inference, evolutionary schema management, and `_rescued_data` DLQ. |
+| **🥈 Silver** | PySpark & Delta Lake | Temporal FX rate joins for USD normalization, SCD Type 2 price tracking via `MERGE INTO`, and Change Data Feed (CDF). |
+| **🥇 Gold** | Kimball Star Schema & Liquid Clustering | 1 Fact line-item table clustered by `(store_key, order_date)` achieving ~3.8x query acceleration; 4 conformed dimensions. |
+| **🛡️ Governance & UAT** | Unity Catalog & Automated Quality | Column Masking on customer PII (`mask_customer_name`), Row-Level Security (`filter_store_country`), zero orphan foreign keys, and **$0.00 checksum variance** on $57.53M gross revenue. |
+| **📊 Serving & BI** | Databricks SQL & Power BI | Serverless SQL Warehouse serving a 3-page Executive Analytics Suite (Sales, Merchandising, Logistics) with DAX Time Intelligence. |
 
 ---
 
