@@ -46,32 +46,19 @@ The serving layer connects to a high-concurrency **Databricks Serverless SQL War
 
 ---
 
-## 🏛️ System Architecture
+## 🏛️ System Architecture & Data Flow
 
-```mermaid
-flowchart LR
-    A["📦 <b>Data Sources</b><br/>5 CSV Feeds"] 
-    -->|CloudFiles Stream| B["🥉 <b>Bronze Layer</b><br/>Auto Loader Ingestion"]
-    -->|PySpark Clean & Merge| C["🥈 <b>Silver Layer</b><br/>SCD Type 2 & Temporal FX"]
-    -->|Liquid Clustering| D["🥇 <b>Gold Layer</b><br/>Kimball Star Schema"]
-    -->|Serverless SQL| E["📊 <b>Executive BI</b><br/>3-Page Power BI Suite"]
-
-    style A fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#ffffff
-    style B fill:#451a03,stroke:#f59e0b,stroke-width:2px,color:#ffffff
-    style C fill:#0f172a,stroke:#94a3b8,stroke-width:2px,color:#ffffff
-    style D fill:#422006,stroke:#eab308,stroke-width:2px,color:#ffffff
-    style E fill:#2e1065,stroke:#a855f7,stroke-width:2px,color:#ffffff
+```text
+[5 Raw CSV Sources] ──(Auto Loader Stream)──> [Bronze: Ingestion & Rescue] ──(PySpark Clean & Merge)──> [Silver: Conformed & SCD2] ──(Liquid Clustering)──> [Gold: Kimball Star Schema] ──(Serverless SQL)──> [Power BI: 3-Page Suite]
 ```
-
-### 📐 Architecture Specifications & Governance
 
 | Layer | Core Technologies | Engineering Implementation & Business Impact |
 | :--- | :--- | :--- |
 | **📦 Data Sources** | Raw CSV Feeds | 62,884 order records, 11,887 customers, 2,517 products, 67 physical/online stores, historical FX rates. |
-| **🥉 Bronze** | Databricks Auto Loader | Streaming `cloudFiles` with schema inference, evolutionary schema management, and `_rescued_data` DLQ. |
-| **🥈 Silver** | PySpark & Delta Lake | Temporal FX rate joins for USD normalization, SCD Type 2 price tracking via `MERGE INTO`, and Change Data Feed (CDF). |
-| **🥇 Gold** | Kimball Star Schema & Liquid Clustering | 1 Fact line-item table clustered by `(store_key, order_date)` achieving ~3.8x query acceleration; 4 conformed dimensions. |
-| **🛡️ Governance & UAT** | Unity Catalog & Automated Quality | Column Masking on customer PII (`mask_customer_name`), Row-Level Security (`filter_store_country`), zero orphan foreign keys, and **$0.00 checksum variance** on $57.53M gross revenue. |
+| **🥉 Bronze Layer** | Databricks Auto Loader | Streaming `cloudFiles` with schema inference, evolutionary schema management, and `_rescued_data` DLQ. |
+| **🥈 Silver Layer** | PySpark & Delta Lake | Temporal FX rate joins for USD normalization, SCD Type 2 price tracking via `MERGE INTO`, and Change Data Feed (CDF). |
+| **🥇 Gold Layer** | Kimball Star Schema & Liquid Clustering | 1 Fact line-item table clustered by `(store_key, order_date)` achieving ~3.8x query acceleration; 4 conformed dimensions. |
+| **🛡️ Quality & Governance** | Unity Catalog & Automated UAT | Column Masking on customer PII (`mask_customer_name`), Row-Level Security (`filter_store_country`), zero orphan foreign keys, and **$0.00 checksum variance** on $57.53M gross revenue. |
 | **📊 Serving & BI** | Databricks SQL & Power BI | Serverless SQL Warehouse serving a 3-page Executive Analytics Suite (Sales, Merchandising, Logistics) with DAX Time Intelligence. |
 
 ---
