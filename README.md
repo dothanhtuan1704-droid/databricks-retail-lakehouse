@@ -28,21 +28,45 @@ The platform ingests multi-channel retail transactional data, tracks historical 
 
 ---
 
-## 📊 Executive Dashboard Preview
+## 📈 Power BI 3-Page Executive Analytics Suite
 
-The serving layer connects to a high-concurrency **Databricks Serverless SQL Warehouse**, feeding a real-time **Power BI Executive Performance Dashboard** designed with modern Clean UI/UX principles (soft shadows, 10px rounded elevation, responsive cross-filtering, and hierarchical drill-down):
+Connected directly to Databricks Serverless SQL Warehouse, delivering sub-second interactive analytics across 3 business-critical perspectives:
 
-![KD_SHOP_FLC Executive Dashboard](powerbi/dashboard_overview.png)
+### Page 1: Executive Business Performance (CFO & Leadership Overview)
+* **Core Metrics:** Total Sales **$57.53M**, Total Profit **$33.70M**, Margin **58.58%**, Total Orders **26,326**.
+* **Visuals:** KPI callouts, store size revenue distribution, fulfillment status donut, multi-year sales & order volume trajectory, multi-dimensional Year/Month hierarchy matrix.
 
-### Key Visual Components:
-1. **Top Header & Date Navigator:** Modern violet `#8E6BF5` executive banner featuring a seamless `Between` date slicer (`2015 – 2022`).
-2. **Hero KPI Cards:** Real-time callout metrics with elevation shadows (`26,326 Orders`, `$57.53M Sales`, `$33.70M Profit`, `58.58% Margin`).
-3. **Operational Fulfillment (Donut Chart):** Real-time fulfillment tracking (`78.8% Delivered` vs `21.2% Pending`).
-4. **Channel & Store Performance (Horizontal Bar Chart):** Order distribution across retail store formats (`Large`, `Medium`, `Online`, `Small`).
-5. **Macro Sales Trend (Dual-Axis Combo Chart):** High-density continuous daily timeline (2016–2021) overlaying order counts with revenue peaks.
-6. **Category Revenue Breakdown (Ranked Bar Chart):** Department-level sales performance ranked from `Computers` ($20M) to `Games and Toys` ($1M).
-7. **Hierarchical Financial Matrix (Drill-Down Table):** Multi-level Year $\rightarrow$ Month financial breakdown with Millions (`M`) units, integer percentages, and expandable row hierarchies.
-8. **Sidebar Control Panel:** Interactive dropdown slicers for `Category` and `Country` with a 1-click `Clear all slicers` action button.
+![Page 1: Executive Business Performance](powerbi/Page1_Business_Performance_Dashboard.png)
+
+### Page 2: Product & Category Deep-Dive (Merchandising Intelligence)
+* **Core Metrics:** Units Sold, Category Revenue Share, Average Order Value (AOV), Top Category.
+* **Visuals:** 8-color gradient Category Treemap, Top 10 Bestselling Products clustered bar chart, multi-slicer filtering (Date, Category, Country, Brand).
+
+![Page 2: Product & Category Deep-Dive](powerbi/Page2_Product_Category_DeepDive.png)
+
+### Page 3: Customer Demographics & Global Logistics Operations (Supply Chain & CRM)
+* **Core Metrics:** Total Customers (11,887), Avg Delivery Days (4.5 Days), On-Time Rate, Pending Orders.
+* **Visuals:** World Geographic Bubble Map, Revenue by Gender Donut Chart, Sales by Customer Age Group Column Chart, Avg Delivery Days by Destination Country Bar Chart.
+
+![Page 3: Customer Demographics & Global Logistics Operations](powerbi/Page3_Customer_Logistics_Operations.png)
+
+### Core DAX Measures
+```dax
+-- Total Net Sales
+Total Sales USD = SUM(fact_sales[sales_amount_usd])
+
+-- Total Gross Profit
+Total Profit USD = SUM(fact_sales[gross_profit_usd])
+
+-- Gross Profit Margin %
+Profit Margin % = DIVIDE([Total Profit USD], [Total Sales USD], 0)
+
+-- Distinct Orders Count
+Total Orders = DISTINCTCOUNT(fact_sales[order_number])
+
+-- Active Customers Count
+Total Customers = DISTINCTCOUNT(fact_sales[customer_key])
+```
 
 ---
 
@@ -54,12 +78,12 @@ The serving layer connects to a high-concurrency **Databricks Serverless SQL War
 
 | Layer | Core Technologies | Engineering Implementation & Business Impact |
 | :--- | :--- | :--- |
-| **📦 Data Sources** | Raw CSV Feeds | 62,884 order records, 11,887 customers, 2,517 products, 67 physical/online stores, historical FX rates. |
-| **🥉 Bronze Layer** | Databricks Auto Loader | Streaming `cloudFiles` with schema inference, evolutionary schema management, and `_rescued_data` DLQ. |
-| **🥈 Silver Layer** | PySpark & Delta Lake | Temporal FX rate joins for USD normalization, SCD Type 2 price tracking via `MERGE INTO`, and Change Data Feed (CDF). |
-| **🥇 Gold Layer** | Kimball Star Schema & Liquid Clustering | 1 Fact line-item table clustered by `(store_key, order_date)` achieving ~3.8x query acceleration; 4 conformed dimensions. |
-| **🛡️ Quality & Governance** | Unity Catalog & Automated UAT | Column Masking on customer PII (`mask_customer_name`), Row-Level Security (`filter_store_country`), zero orphan foreign keys, and **$0.00 checksum variance** on $57.53M gross revenue. |
-| **📊 Serving & BI** | Databricks SQL & Power BI | Serverless SQL Warehouse serving a 3-page Executive Analytics Suite (Sales, Merchandising, Logistics) with DAX Time Intelligence. |
+| **Data Sources** | Raw CSV Feeds | 62,884 order records, 11,887 customers, 2,517 products, 67 physical/online stores, historical FX rates. |
+| **Bronze Layer** | Databricks Auto Loader | Streaming `cloudFiles` with schema inference, evolutionary schema management, and `_rescued_data` DLQ. |
+| **Silver Layer** | PySpark & Delta Lake | Temporal FX rate joins for USD normalization, SCD Type 2 price tracking via `MERGE INTO`, and Change Data Feed (CDF). |
+| **Gold Layer** | Kimball Star Schema & Liquid Clustering | 1 Fact line-item table clustered by `(store_key, order_date)` achieving ~3.8x query acceleration; 4 conformed dimensions. |
+| **Quality & Governance** | Unity Catalog & Automated UAT | Column Masking on customer PII (`mask_customer_name`), Row-Level Security (`filter_store_country`), zero orphan foreign keys, and **$0.00 checksum variance** on $57.53M gross revenue. |
+| **Serving & BI** | Databricks SQL & Power BI | Serverless SQL Warehouse serving a 3-page Executive Analytics Suite (Sales, Merchandising, Logistics) with DAX Time Intelligence. |
 
 ---
 
@@ -140,48 +164,6 @@ The serving layer connects to a high-concurrency **Databricks Serverless SQL War
 
 ---
 
-## 📈 Power BI 3-Page Executive Analytics Suite
-
-Connected directly to Databricks Serverless SQL Warehouse, delivering sub-second interactive analytics across 3 business-critical perspectives:
-
-### Page 1: Executive Business Performance (CFO & Leadership Overview)
-* **Core Metrics:** Total Sales **$57.53M**, Total Profit **$33.70M**, Margin **58.58%**, Total Orders **26,326**.
-* **Visuals:** KPI callouts, store size revenue distribution, fulfillment status donut, multi-year sales & order volume trajectory, multi-dimensional Year/Month hierarchy matrix.
-
-![Page 1: Executive Business Performance](powerbi/Page1_Business_Performance_Dashboard.png)
-
-### Page 2: Product & Category Deep-Dive (Merchandising Intelligence)
-* **Core Metrics:** Units Sold, Category Revenue Share, Average Order Value (AOV), Top Category.
-* **Visuals:** 8-color gradient Category Treemap, Top 10 Bestselling Products clustered bar chart, multi-slicer filtering (Date, Category, Country, Brand).
-
-![Page 2: Product & Category Deep-Dive](powerbi/Page2_Product_Category_DeepDive.png)
-
-### Page 3: Customer Demographics & Global Logistics Operations (Supply Chain & CRM)
-* **Core Metrics:** Total Customers (11,887), Avg Delivery Days (4.5 Days), On-Time Rate, Pending Orders.
-* **Visuals:** World Geographic Bubble Map, Revenue by Gender Donut Chart, Sales by Customer Age Group Column Chart, Avg Delivery Days by Destination Country Bar Chart.
-
-![Page 3: Customer Demographics & Global Logistics Operations](powerbi/Page3_Customer_Logistics_Operations.png)
-
-### Core DAX Measures
-```dax
--- Total Net Sales
-Total Sales USD = SUM(fact_sales[sales_amount_usd])
-
--- Total Gross Profit
-Total Profit USD = SUM(fact_sales[gross_profit_usd])
-
--- Gross Profit Margin %
-Profit Margin % = DIVIDE([Total Profit USD], [Total Sales USD], 0)
-
--- Distinct Orders Count
-Total Orders = DISTINCTCOUNT(fact_sales[order_number])
-
--- Active Customers Count
-Total Customers = DISTINCTCOUNT(fact_sales[customer_key])
-```
-
----
-
 ## ⚙️ CI/CD & Infrastructure as Code (DABs)
 
 This project adopts enterprise-grade **DevOps for Data** standards:
@@ -231,6 +213,5 @@ databricks bundle run retail_lakehouse_orchestration -t prod
 
 ## 👨‍💻 Author & Project Credits
 * **Developer:** Phan Do Thanh Tuan ([@dothanhtuan1704-droid](https://github.com/dothanhtuan1704-droid))
-* **Target Role:** Data Engineer (OJT / Internship at QAI - FPT Software)
-* **Mentor:** Long (`Lvn`)
-* **Project:** Modern Retail Lakehouse & Executive Analytics Capstone
+* **Role:** Data Engineer
+* **Project:** Modern Retail Lakehouse & Executive Analytics
