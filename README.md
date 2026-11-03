@@ -125,7 +125,9 @@ Total Customers = DISTINCTCOUNT(fact_sales[customer_key])
 ### 2. Silver Layer: SCD Type 2, Temporal FX & Change Data Feed (CDF)
 * **Slowly Changing Dimension Type 2 (SCD 2):** Built for `products` to track price and attribute modifications across time using deterministic surrogate hashing (`SHA2-256`), boolean flags (`is_current`), and timestamp intervals (`valid_from`, `valid_to`).
 * **Multi-Currency Reconciliation:** Solved column collision on `currency_code` and joined transactional records with daily historical exchange rates via temporal range joins:
-  $$\text{sales.order\_date} \ge \text{fx.effective\_start\_date} \land \text{sales.order\_date} < \text{fx.effective\_end\_date}$$
+  ```sql
+  sales.order_date >= fx.effective_start_date AND sales.order_date < fx.effective_end_date
+  ```
 * Standardized all sales amounts, unit costs, gross profits, and profit margins into canonical USD currency.
 * **Delta Change Data Feed (CDF):** Enabled `delta.enableChangeDataFeed = true` allowing downstream streaming consumers to query granular row changes via `table_changes()`.
 
@@ -146,7 +148,7 @@ Total Customers = DISTINCTCOUNT(fact_sales[customer_key])
 * Built regression test assertions in notebook `04_data_quality_reconciliation.py`:
   * **Checksum Validation:** Verified Bronze total sales match Gold `fact_sales` sales to 2 decimal places ($57,531,338.52).
   * **Referential Integrity:** Enforced 0 orphan foreign keys (`store_key`, `customer_key`, `product_key`, `order_date`) against their respective dimension tables.
-  * **Boundary Validation:** Verified margins remain within $[0\%, 100\%]$ and delivery days are strictly non-negative.
+  * **Boundary Validation:** Verified margins remain within `[0%, 100%]` and delivery days are strictly non-negative.
 
 ### 5. Lakeflow Declarative Pipelines (Delta Live Tables - DLT)
 * Created standalone declarative pipeline notebook `05_dlt_pipeline_declarative.py/.ipynb` demonstrating:
